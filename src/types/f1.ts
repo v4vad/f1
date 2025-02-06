@@ -1,6 +1,6 @@
 export interface Driver {
   driverId: string;
-  permanentNumber: string;
+  permanentNumber?: string;
   code: string;
   url: string;
   givenName: string;
@@ -25,6 +25,14 @@ export interface DriverStanding {
   Constructors: Constructor[];
 }
 
+export interface ConstructorStanding {
+  position: string;
+  positionText: string;
+  points: string;
+  wins: string;
+  Constructor: Constructor;
+}
+
 export interface Race {
   season: string;
   round: string;
@@ -42,7 +50,7 @@ export interface Race {
     };
   };
   date: string;
-  time: string;
+  time?: string;
 }
 
 export interface StandingsResponse {
@@ -132,6 +140,34 @@ export interface LapTimesResponse {
       round: string;
       Races: Array<Race & {
         Laps: LapTime[];
+      }>;
+    };
+  };
+}
+
+export interface PitStop {
+  driverId: string;
+  lap: string;
+  stop: string;
+  time: string;
+  duration: string;
+}
+
+export interface ChampionResponse {
+  MRData: {
+    xmlns: string;
+    series: string;
+    url: string;
+    limit: string;
+    offset: string;
+    total: string;
+    StandingsTable: {
+      season: string;
+      StandingsLists: Array<{
+        season: string;
+        round: string;
+        DriverStandings?: DriverStanding[];
+        ConstructorStandings?: ConstructorStanding[];
       }>;
     };
   };

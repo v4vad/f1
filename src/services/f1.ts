@@ -129,4 +129,80 @@ export async function getPitStops(season: string, round: string): Promise<PitSto
     throw new Error('Failed to fetch pit stops');
   }
   return response.json();
+}
+
+interface ChampionResponse {
+  MRData: {
+    StandingsTable: {
+      season: string;
+      StandingsLists: Array<{
+        season: string;
+        round: string;
+        DriverStandings?: Array<{
+          position: string;
+          points: string;
+          wins: string;
+          Driver: {
+            driverId: string;
+            permanentNumber?: string;
+            code: string;
+            url: string;
+            givenName: string;
+            familyName: string;
+            dateOfBirth: string;
+            nationality: string;
+          };
+          Constructors: Array<{
+            constructorId: string;
+            url: string;
+            name: string;
+            nationality: string;
+          }>;
+        }>;
+        ConstructorStandings?: Array<{
+          position: string;
+          points: string;
+          wins: string;
+          Constructor: {
+            constructorId: string;
+            url: string;
+            name: string;
+            nationality: string;
+          };
+        }>;
+      }>;
+    };
+  };
+}
+
+export async function getDriverChampion(season: string): Promise<ChampionResponse> {
+  const response = await fetch(`${BASE_URL}/${season}/driverStandings/1.json`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch driver champion');
+  }
+  return response.json();
+}
+
+export async function getConstructorChampion(season: string): Promise<ChampionResponse> {
+  const response = await fetch(`${BASE_URL}/${season}/constructorStandings/1.json`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch constructor champion');
+  }
+  return response.json();
+}
+
+export async function getDriverStandings(season: string): Promise<StandingsResponse> {
+  const response = await fetch(`${BASE_URL}/${season}/driverStandings.json`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch driver standings');
+  }
+  return response.json();
+}
+
+export async function getConstructorStandings(season: string): Promise<StandingsResponse> {
+  const response = await fetch(`${BASE_URL}/${season}/constructorStandings.json`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch constructor standings');
+  }
+  return response.json();
 } 
