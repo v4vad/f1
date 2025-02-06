@@ -95,7 +95,35 @@ export async function getLapTimes(season: string, round: string): Promise<LapTim
   return combinedLaps;
 }
 
-export async function getPitStops(season: string, round: string): Promise<any> {
+interface PitStopResponse {
+  MRData: {
+    RaceTable: {
+      season: string;
+      round: string;
+      Races: Array<{
+        season: string;
+        round: string;
+        raceName: string;
+        Circuit: {
+          circuitId: string;
+          url: string;
+          circuitName: string;
+        };
+        date: string;
+        time: string;
+        PitStops: Array<{
+          driverId: string;
+          lap: string;
+          stop: string;
+          time: string;
+          duration: string;
+        }>;
+      }>;
+    };
+  };
+}
+
+export async function getPitStops(season: string, round: string): Promise<PitStopResponse> {
   const response = await fetch(`${BASE_URL}/${season}/${round}/pitstops.json`);
   if (!response.ok) {
     throw new Error('Failed to fetch pit stops');

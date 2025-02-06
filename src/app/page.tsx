@@ -76,16 +76,19 @@ export default function Home() {
   const [lapTimes, setLapTimes] = useState<Array<{lap: string; time: string; position: string}>>([]);
   const [lapTimesLoading, setLapTimesLoading] = useState(false);
   const [pitStops, setPitStops] = useState<Array<{lap: string; duration: string; stop: string}>>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSeasons = async () => {
+      setError(null);
       try {
         const data = await getSeasons();
         const seasonsList = data.MRData.SeasonTable.Seasons.map(s => s.season).reverse();
         setSeasons(seasonsList);
-        setLoading(false);
       } catch (error) {
+        setError('Failed to fetch seasons. Please try again.');
         console.error('Error fetching seasons:', error);
+      } finally {
         setLoading(false);
       }
     };
@@ -97,23 +100,33 @@ export default function Home() {
     setSelectedSeason(season);
     setSelectedRace('');
     setRaceResults([]);
+    setError(null);
+    setLoading(true);
     
     try {
       const data = await getSeasonRaces(season);
       setRaces(data.MRData.RaceTable.Races);
     } catch (error) {
+      setError('Failed to fetch races. Please try again.');
       console.error('Error fetching races:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRaceChange = async (round: string) => {
     setSelectedRace(round);
+    setError(null);
+    setLoading(true);
     
     try {
       const data = await getRaceResults(selectedSeason, round);
       setRaceResults(data.MRData.RaceTable.Races[0].Results);
     } catch (error) {
+      setError('Failed to fetch race results. Please try again.');
       console.error('Error fetching race results:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -122,11 +135,16 @@ export default function Home() {
     if (!selectedSeason || !selectedRace) return;
     
     setLapTimesLoading(true);
+    setError(null);
     try {
       const [lapData, pitData] = await Promise.all([
         getLapTimes(selectedSeason, selectedRace),
         getPitStops(selectedSeason, selectedRace)
       ]);
+
+      if (!lapData.MRData.RaceTable.Races[0]) {
+        throw new Error('No lap data available for this race');
+      }
 
       // Process lap times
       const driverLaps = lapData.MRData.RaceTable.Races[0].Laps
@@ -140,8 +158,8 @@ export default function Home() {
       
       // Process pit stops
       const driverPitStops = pitData.MRData.RaceTable.Races[0]?.PitStops
-        ?.filter((stop: any) => stop.driverId === driverId)
-        .map((stop: any) => ({
+        ?.filter((stop) => stop.driverId === driverId)
+        .map((stop) => ({
           lap: stop.lap,
           duration: stop.duration,
           stop: stop.stop
@@ -150,6 +168,7 @@ export default function Home() {
       setLapTimes(driverLaps);
       setPitStops(driverPitStops);
     } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to fetch lap times. Please try again.');
       console.error('Error fetching data:', error);
     } finally {
       setLapTimesLoading(false);
@@ -204,11 +223,18 @@ export default function Home() {
     const previous = convertToSeconds(previousTime);
     const delta = current - previous;
     
-    return delta.toFixed(3);
+    return delta;
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="text-lg">Loading...</div>
+          {error && <div className="text-sm text-red-500">{error}</div>}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -218,6 +244,12 @@ export default function Home() {
           <h1 className="text-2xl font-bold">Formula 1 Race Results</h1>
           <ThemeToggle />
         </div>
+      
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-md text-sm">
+            {error}
+          </div>
+        )}
       
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -473,14 +505,14 @@ export default function Home() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span>{lap.time}</span>
-                                  {delta && (
+                                  {delta !== null && (
                                     <span className={cn(
                                       "font-medium text-[10px]",
-                                      parseFloat(delta) > 0 ? "text-red-500 dark:text-red-400" : 
-                                      parseFloat(delta) < 0 ? "text-green-500 dark:text-green-400" : 
+                                      delta > 0 ? "text-red-500 dark:text-red-400" : 
+                                      delta < 0 ? "text-green-500 dark:text-green-400" : 
                                       "text-muted-foreground"
                                     )}>
-                                      ({delta > 0 ? "+" : ""}{delta})
+                                      ({delta > 0 ? "+" : ""}{delta.toFixed(3)})
                                     </span>
                                   )}
                                 </div>
