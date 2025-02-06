@@ -241,7 +241,7 @@ export function ChampionsClient({ initialChampions, totalSeasons }: ChampionsCli
                             <div className="space-y-2">
                               <div className="text-xs text-muted-foreground flex items-center gap-2">
                                 <Trophy className="h-3.5 w-3.5" />
-                                Driver's Champion
+                                Driver&apos;s Champion
                               </div>
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -275,7 +275,7 @@ export function ChampionsClient({ initialChampions, totalSeasons }: ChampionsCli
                             <div className="space-y-2">
                               <div className="text-xs text-muted-foreground flex items-center gap-2">
                                 <Medal className="h-3.5 w-3.5" />
-                                Constructor's Champion
+                                Constructor&apos;s Champion
                               </div>
                               <div>
                                 <div className="flex items-center gap-2 mb-1">

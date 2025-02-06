@@ -1,14 +1,7 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft } from 'lucide-react';
 import { getDriverStandings, getConstructorStandings, getSeasonRaces, getRaceResults } from "@/services/f1";
 import { GB, DE, ES, MX, MC, AU, NL, FI, FR, CA, JP, DK, TH, CN, US, IT } from 'country-flag-icons/react/3x2';
 import { cn } from "@/lib/utils";
-import { Breadcrumb } from '@/components/breadcrumb';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { Trophy } from 'lucide-react';
 import { Race } from '@/types/f1';
 import { SeasonHeader } from '@/components/season-header';
 
@@ -86,7 +79,11 @@ async function getSeasonData(year: string) {
   }
 }
 
-export default async function SeasonPage({ params }: { params: { year: string } }) {
+export default async function SeasonPage({
+  params,
+}: {
+  params: { year: string };
+}) {
   const { drivers, constructors, races } = await getSeasonData(params.year);
 
   return (
@@ -191,7 +188,7 @@ export default async function SeasonPage({ params }: { params: { year: string } 
                       </div>
                     </div>
                     <div className="flex items-center justify-end gap-6 mt-2 lg:mt-0">
-                      {race.podium?.map((result, index) => (
+                      {race.podium?.map((result) => (
                         <div key={result.position} className="flex items-center gap-2">
                           <div className={cn(
                             "w-1 h-6",
