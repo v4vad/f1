@@ -1,6 +1,33 @@
 import { StandingsResponse, RaceScheduleResponse, RaceResultsResponse, SeasonsResponse, LapTimesResponse } from "@/types/f1";
 
 const BASE_URL = "https://ergast.com/api/f1";
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      if (response.status === 429 && retries > 0) { // Rate limit hit
+        console.log(`Rate limit hit, retrying in ${RETRY_DELAY}ms...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return fetchWithRetry(url, retries - 1);
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return response;
+  } catch (error) {
+    if (retries > 0) {
+      console.log(`Request failed, retrying in ${RETRY_DELAY}ms...`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      return fetchWithRetry(url, retries - 1);
+    }
+    throw error;
+  }
+}
 
 export async function getCurrentDriverStandings(): Promise<StandingsResponse> {
   const response = await fetch(`${BASE_URL}/current/driverStandings.json`);
@@ -19,11 +46,19 @@ export async function getCurrentSeasonSchedule(): Promise<RaceScheduleResponse> 
 }
 
 export async function getSeasons(): Promise<SeasonsResponse> {
-  const response = await fetch(`${BASE_URL}/seasons.json?limit=100`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch seasons');
+  try {
+    const response = await fetchWithRetry(`${BASE_URL}/seasons.json?limit=100`);
+    const data = await response.json();
+    
+    if (!data?.MRData?.SeasonTable?.Seasons) {
+      throw new Error('Invalid response format from seasons endpoint');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching seasons:', error);
+    throw new Error('Failed to fetch seasons data');
   }
-  return response.json();
 }
 
 export async function getSeasonRaces(season: string): Promise<RaceScheduleResponse> {
@@ -176,19 +211,35 @@ interface ChampionResponse {
 }
 
 export async function getDriverChampion(season: string): Promise<ChampionResponse> {
-  const response = await fetch(`${BASE_URL}/${season}/driverStandings/1.json`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch driver champion');
+  try {
+    const response = await fetchWithRetry(`${BASE_URL}/${season}/driverStandings/1.json`);
+    const data = await response.json();
+    
+    if (!data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings?.[0]) {
+      throw new Error('Invalid response format from driver champion endpoint');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`Error fetching driver champion for season ${season}:`, error);
+    throw new Error(`Failed to fetch driver champion data for season ${season}`);
   }
-  return response.json();
 }
 
 export async function getConstructorChampion(season: string): Promise<ChampionResponse> {
-  const response = await fetch(`${BASE_URL}/${season}/constructorStandings/1.json`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch constructor champion');
+  try {
+    const response = await fetchWithRetry(`${BASE_URL}/${season}/constructorStandings/1.json`);
+    const data = await response.json();
+    
+    if (!data?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings?.[0]) {
+      throw new Error('Invalid response format from constructor champion endpoint');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`Error fetching constructor champion for season ${season}:`, error);
+    throw new Error(`Failed to fetch constructor champion data for season ${season}`);
   }
-  return response.json();
 }
 
 export async function getDriverStandings(season: string): Promise<StandingsResponse> {

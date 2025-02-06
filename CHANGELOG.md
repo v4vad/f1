@@ -22,13 +22,21 @@
   - Resolved theme toggle server component error
   - Fixed championship cards navigation
   - Improved error handling in data fetching
+  - Added workaround for TypeScript build errors using config flags
 
-### Planned Optimizations
+### Backlog Items
+- Technical Debt
+  - Remove TypeScript build error workaround and properly type check the codebase
+  - Implement proper error boundaries for API failures
+  - Add comprehensive test coverage
+  - Improve API response type definitions
+
 - Data Fetching & Caching
   - Implement React Query for better data management
   - Add server-side caching for F1 API responses
   - Use Next.js static generation for historical seasons
   - Add error boundaries and retry mechanisms
+  - Implement request debouncing and rate limiting
 
 - Performance Improvements
   - Memoize expensive computations
@@ -36,12 +44,15 @@
   - Add virtualization for large lists
   - Implement lazy loading for images
   - Add progressive loading
+  - Optimize bundle size
+  - Implement code splitting
 
 - Code Structure
   - Extract reusable components
   - Reorganize constants and types
   - Create custom hooks
   - Improve TypeScript types
+  - Add proper documentation
 
 - UX Enhancements
   - Add loading skeletons
@@ -49,34 +60,48 @@
   - Add animations
   - Improve keyboard navigation
   - Add tooltips
+  - Implement better mobile responsiveness
+  - Add offline support
 
 - Bundle Optimization
   - Split country flags into separate chunk
   - Implement dynamic imports
   - Optimize SVGs
   - Tree-shake unused data
+  - Implement proper code splitting
 
 - State Management
   - Implement robust state management
   - Add proper loading states
   - Improve TypeScript types
+  - Add proper error handling
 
 - Accessibility
   - Add ARIA labels and roles
   - Improve keyboard navigation
   - Ensure proper color contrast
   - Add screen reader support
+  - Implement focus management
 
 - Network Optimization
   - Implement request debouncing
   - Add request cancellation
   - Add retry logic
   - Improve loading states
+  - Add offline support
 
 - Memory Management
   - Improve event listener cleanup
   - Better useEffect cleanup
   - Optimize large dataset handling
+  - Implement proper garbage collection
+
+- Testing
+  - Add unit tests for components
+  - Add integration tests
+  - Add end-to-end tests
+  - Add performance tests
+  - Add accessibility tests
 
 ### Added
 - New home page showing F1 champions
