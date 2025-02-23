@@ -87,16 +87,13 @@ export default function RaceResults() {
 
   // Handle URL parameters
   useEffect(() => {
-    const season = searchParams.get('season');
-    const race = searchParams.get('race');
-    
-    if (season && seasons.includes(season)) {
+    if (searchParams.get('season') && searchParams.get('race')) {
+      const season = searchParams.get('season') as string;
+      const race = searchParams.get('race') as string;
       handleSeasonChange(season);
-      if (race) {
-        handleRaceChange(race);
-      }
+      handleRaceChange(race);
     }
-  }, [seasons, searchParams]);
+  }, [searchParams, handleSeasonChange, handleRaceChange]);
 
   useEffect(() => {
     const fetchSeasons = async () => {
