@@ -3,28 +3,53 @@ import { getCachedData } from "@/lib/cache";
 
 const BASE_URL = "https://ergast.com/api/f1";
 
+// Rate limiting configuration
+const RATE_LIMIT = {
+  requestsPerSecond: 4,
+  minDelay: 250, // Minimum delay between requests in ms
+};
+
+let lastRequestTime = 0;
+
 // Add delay between requests to respect rate limits
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Rate limiter function
+async function rateLimiter() {
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  
+  if (timeSinceLastRequest < RATE_LIMIT.minDelay) {
+    const waitTime = RATE_LIMIT.minDelay - timeSinceLastRequest;
+    await delay(waitTime);
+  }
+  
+  lastRequestTime = Date.now();
+}
 
 // Wrapper for fetch with retry logic and rate limiting
 async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
   for (let i = 0; i < retries; i++) {
     try {
-      // Add a 250ms delay between requests (4 requests per second limit)
-      await delay(250);
+      await rateLimiter(); // Apply rate limiting before each request
       const response = await fetch(url);
+      
       if (response.ok) {
         return response;
       }
-      if (response.status === 503) {
-        // If we hit the rate limit, wait a bit longer
-        await delay(1000);
+      
+      if (response.status === 429 || response.status === 503) {
+        // If we hit the rate limit, wait longer
+        const retryAfter = response.headers.get('Retry-After');
+        const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : (i + 1) * 2000;
+        await delay(waitTime);
         continue;
       }
+      
       throw new Error(`HTTP error! status: ${response.status}`);
     } catch (error) {
       if (i === retries - 1) throw error;
-      await delay(1000); // Wait longer between retries
+      await delay((i + 1) * 2000); // Exponential backoff
     }
   }
   throw new Error('Max retries reached');

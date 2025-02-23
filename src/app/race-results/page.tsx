@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getSeasons, getSeasonRaces, getRaceResults, getLapTimes, getPitStops } from "@/services/f1";
 import { Race, RaceResult } from "@/types/f1";
-import { useEffect } from 'react';
 import { GB, DE, ES, MX, MC, AU, NL, FI, FR, CA, JP, DK, TH, CN, US, IT } from 'country-flag-icons/react/3x2';
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -71,7 +70,7 @@ const constructorColors: { [key: string]: string } = {
   'Arrows': 'border-[#FF8700]',
 };
 
-export default function RaceResults() {
+function RaceResultsContent() {
   const searchParams = useSearchParams();
   const [seasons, setSeasons] = useState<string[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
@@ -85,35 +84,7 @@ export default function RaceResults() {
   const [pitStops, setPitStops] = useState<Array<{lap: string; duration: string; stop: string}>>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle URL parameters
-  useEffect(() => {
-    if (searchParams.get('season') && searchParams.get('race')) {
-      const season = searchParams.get('season') as string;
-      const race = searchParams.get('race') as string;
-      handleSeasonChange(season);
-      handleRaceChange(race);
-    }
-  }, [searchParams, handleSeasonChange, handleRaceChange]);
-
-  useEffect(() => {
-    const fetchSeasons = async () => {
-      setError(null);
-      try {
-        const data = await getSeasons();
-        const seasonsList = data.MRData.SeasonTable.Seasons.map(s => s.season).reverse();
-        setSeasons(seasonsList);
-      } catch (error) {
-        setError('Failed to fetch seasons. Please try again.');
-        console.error('Error fetching seasons:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSeasons();
-  }, []);
-
-  const handleSeasonChange = async (season: string) => {
+  const handleSeasonChange = useCallback(async (season: string) => {
     setSelectedSeason(season);
     setSelectedRace('');
     setRaceResults([]);
@@ -129,9 +100,9 @@ export default function RaceResults() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleRaceChange = async (round: string) => {
+  const handleRaceChange = useCallback(async (round: string) => {
     setSelectedRace(round);
     setError(null);
     setLoading(true);
@@ -145,9 +116,9 @@ export default function RaceResults() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedSeason]);
 
-  const handleDriverSelect = async (driverId: string) => {
+  const handleDriverSelect = useCallback(async (driverId: string) => {
     setSelectedDriver(driverId);
     if (!selectedSeason || !selectedRace) return;
     
@@ -190,7 +161,37 @@ export default function RaceResults() {
     } finally {
       setLapTimesLoading(false);
     }
-  };
+  }, [selectedSeason, selectedRace]);
+
+  useEffect(() => {
+    const season = searchParams.get('season');
+    const race = searchParams.get('race');
+    
+    if (season) {
+      handleSeasonChange(season);
+    }
+    if (race) {
+      handleRaceChange(race);
+    }
+  }, [searchParams, handleSeasonChange, handleRaceChange]);
+
+  useEffect(() => {
+    const fetchSeasons = async () => {
+      setError(null);
+      try {
+        const data = await getSeasons();
+        const seasonsList = data.MRData.SeasonTable.Seasons.map(s => s.season).reverse();
+        setSeasons(seasonsList);
+      } catch (error) {
+        setError('Failed to fetch seasons. Please try again.');
+        console.error('Error fetching seasons:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSeasons();
+  }, []);
 
   const getPodiumColor = (position: string) => {
     switch (position) {
@@ -565,5 +566,19 @@ export default function RaceResults() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function RaceResults() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="text-lg">Loading race results...</div>
+        </div>
+      </div>
+    }>
+      <RaceResultsContent />
+    </Suspense>
   );
 }

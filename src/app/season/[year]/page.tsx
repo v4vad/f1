@@ -224,7 +224,7 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
                   {races.map((race) => (
                     <Link
                       key={race.round}
-                      href={`/race-results?season=${params.year}&race=${race.round}`}
+                      href={`/race-results?season=${year}&race=${race.round}`}
                       className="block"
                     >
                       <div className={cn(

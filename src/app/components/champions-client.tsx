@@ -139,22 +139,26 @@ export function ChampionsClient({ initialChampions, totalSeasons }: ChampionsCli
           ]);
 
           const driverStanding = driverData.MRData.StandingsTable.StandingsLists[0]?.DriverStandings?.[0];
-          const constructorStanding = constructorData.MRData.StandingsTable.StandingsLists[0]?.ConstructorStandings?.[0];
+          const constructorStanding = constructorData.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings?.[0];
+
+          if (!driverStanding || !constructorStanding) {
+            throw new Error(`No champion data found for season ${season}`);
+          }
 
           return {
             season,
             driver: {
-              name: `${driverStanding?.Driver.givenName} ${driverStanding?.Driver.familyName}`,
-              nationality: driverStanding?.Driver.nationality || '',
-              constructor: driverStanding?.Constructors[0].name || '',
-              points: driverStanding?.points || '',
-              wins: driverStanding?.wins || ''
+              name: `${driverStanding.Driver.givenName} ${driverStanding.Driver.familyName}`,
+              nationality: driverStanding.Driver.nationality || '',
+              constructor: driverStanding.Constructors[0].name || '',
+              points: driverStanding.points || '',
+              wins: driverStanding.wins || ''
             },
             constructor: {
-              name: constructorStanding?.Constructor.name || '',
-              nationality: constructorStanding?.Constructor.nationality || '',
-              points: constructorStanding?.points || '',
-              wins: constructorStanding?.wins || ''
+              name: constructorStanding.Constructor.name || '',
+              nationality: constructorStanding.Constructor.nationality || '',
+              points: constructorStanding.points || '',
+              wins: constructorStanding.wins || ''
             }
           };
         })
