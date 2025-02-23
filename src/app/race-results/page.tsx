@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 const nationalityToFlag: { [key: string]: React.ComponentType<{ className?: string }> } = {
   British: GB,
@@ -71,6 +72,7 @@ const constructorColors: { [key: string]: string } = {
 };
 
 export default function RaceResults() {
+  const searchParams = useSearchParams();
   const [seasons, setSeasons] = useState<string[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [races, setRaces] = useState<Race[]>([]);
@@ -82,6 +84,19 @@ export default function RaceResults() {
   const [lapTimesLoading, setLapTimesLoading] = useState(false);
   const [pitStops, setPitStops] = useState<Array<{lap: string; duration: string; stop: string}>>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle URL parameters
+  useEffect(() => {
+    const season = searchParams.get('season');
+    const race = searchParams.get('race');
+    
+    if (season && seasons.includes(season)) {
+      handleSeasonChange(season);
+      if (race) {
+        handleRaceChange(race);
+      }
+    }
+  }, [seasons, searchParams]);
 
   useEffect(() => {
     const fetchSeasons = async () => {
